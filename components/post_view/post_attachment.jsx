@@ -6,7 +6,11 @@ import $ from 'jquery';
 import PropTypes from 'prop-types';
 import React from 'react';
 
+import * as ChannelActions from 'actions/channel_actions.jsx';
 import * as PostActions from 'actions/post_actions.jsx';
+
+import TeamStore from 'stores/team_store.jsx';
+import ChannelStore from 'stores/channel_store.jsx';
 
 import * as TextFormatting from 'utils/text_formatting.jsx';
 import {isUrlSafe} from 'utils/url.jsx';
@@ -106,7 +110,7 @@ export default class PostAttachment extends React.PureComponent {
             buttons.push(
                 <button
                     key={action.id}
-                    onClick={() => this.handleActionButtonClick(action.id)}
+                    onClick={() => this.handleActionButtonClick(action)}
                 >
                     {action.name}
                 </button>
@@ -122,8 +126,15 @@ export default class PostAttachment extends React.PureComponent {
         );
     }
 
-    handleActionButtonClick(actionId) {
-        PostActions.doPostAction(this.props.postId, actionId);
+    handleActionButtonClick(action) {
+        if (action.slash_command) {
+            const args = {};
+            args.channel_id = ChannelStore.getCurrentId();
+            args.team_id = TeamStore.getCurrentId();
+            ChannelActions.executeCommand(action.slash_command, args);
+        } else {
+            PostActions.doPostAction(this.props.postId, action.id);
+        }
     }
 
     getFieldsTable() {
